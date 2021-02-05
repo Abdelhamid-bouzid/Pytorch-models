@@ -39,7 +39,7 @@ class ResidualBlock(nn.Module):
 
 # ResNet
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_points=5):
+    def __init__(self, block, layers, num_points=15):
         super(ResNet, self).__init__()
         self.num_points  = num_points
         self.in_channels = 16
@@ -49,18 +49,18 @@ class ResNet(nn.Module):
         self.layer1      = self.make_layer(block, 16, layers[0])
         self.layer2      = self.make_layer(block, 32, layers[1], 1)
         self.layer3      = self.make_layer(block, 64, layers[2], 1)
-        self.fc1         = nn.Linear(76800, 4096)
+        self.layer4      = self.make_layer(block, 128, layers[3], 1)
+        self.layer5      = self.make_layer(block, 256, layers[4], 1)
+        self.Ap          = nn.AdaptiveAvgPool2d((5,5))
+        self.fc1         = nn.Linear(6400, 4096)
         self.fc2         = nn.Linear(4096, num_points)
         self.fc3         = nn.Linear(num_points, num_points*2)
-        self.dropout     = nn.Dropout(0.5)
         
         
     def make_layer(self, block, out_channels, blocks, stride=1):
         downsample = None
         if (stride != 1) or (self.in_channels != out_channels):
-            downsample = nn.Sequential(
-                conv3x3(self.in_channels, out_channels, stride=stride),
-                nn.BatchNorm2d(out_channels))
+            downsample = nn.Sequential(conv3x3(self.in_channels, out_channels, stride=stride), nn.BatchNorm2d(out_channels))
         layers = []
         layers.append(block(self.in_channels, out_channels, stride, downsample))
         self.in_channels = out_channels
@@ -80,14 +80,17 @@ class ResNet(nn.Module):
         out = F.max_pool2d(out,2)
         out = self.layer2(out)
         out = F.max_pool2d(out,2)
-        out = self.dropout(out)
         out = self.layer3(out)
         out = F.max_pool2d(out,2)
-        out = self.dropout(out)
+        out = self.layer4(out)
+        out = F.max_pool2d(out,2)
+        out = self.layer5(out)
+        out = F.max_pool2d(out,2)
+        out = self.Ap(out)
         out = out.view(out.size(0), -1)
+        #print(out.shape)
         out = self.fc1(out)
         out = self.fc2(out)
-        #out = F.relu(self.fc3(out))
         out = self.fc3(out)
         out = out.reshape(-1, self.num_points, 2)
         #print(out.shape)
