@@ -81,8 +81,6 @@ def learning_function(model,images_train, labels_train,images_test,labels_test):
             
         Loss_test.append(ll/len(list_inds))
         print("   #####  Train Epoch: {} train_loss: {:0.4f} test_loss: {:0.4f}".format(i,Loss_train[-1],Loss_test[-1]))
-        
-        print("   #####  Train Epoch: {} train_loss: {:0.4f} test_loss: {:0.4f}".format(i,Loss_train[-1],0))
         if Loss_test[-1]<best_loss:
             best_loss = Loss_train[-1]
             torch.save(model,'models/model.pth')
