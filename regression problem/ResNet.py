@@ -53,8 +53,8 @@ class ResNet(nn.Module):
         self.layer5      = self.make_layer(block, 256, layers[4], 1)
         self.Ap          = nn.AdaptiveAvgPool2d((5,5))
         self.fc1         = nn.Linear(6400, 4096)
-        self.fc2         = nn.Linear(4096, num_points)
-        self.fc3         = nn.Linear(num_points, num_points*2)
+        self.fc2         = nn.Linear(4096, 2*self.num_points)
+        self.fc3         = nn.Linear(2*self.num_points, 2*self.num_points)
         
         
     def make_layer(self, block, out_channels, blocks, stride=1):

@@ -12,23 +12,23 @@ from config import config
 def load_data():
     
     data   = np.load(config["data_path"])
-    labels = np.load(config["labels_path"]) 
+    labels = np.load(config["labels_path"])[:,:config["number_points"],:] 
 
     if config["0_1_mapping"]:
         labels[:,:,0] = labels[:,:,0]/640
         labels[:,:,1] = labels[:,:,1]/480
 
+    if config["random"]:
+        arr = np.arange(data.shape[0])
+        np.random.shuffle(arr)
+         
+        data   = data[arr]
+        labels = labels[arr]
     
-    arr = np.arange(data.shape[0])
-    np.random.shuffle(arr)
-    
-    data   = data[arr]
-    labels = labels[arr]
-    
-    images_train = data[:300]
-    labels_train = labels[:300]
-    images_test  = data[300:]
-    labels_test  = labels[300:]
+    images_train = data[:config["train points"]]
+    labels_train = labels[:config["train points"]]
+    images_test  = data[config["train points"]:]
+    labels_test  = labels[config["train points"]:]
     
     np.save('data/images_train.npy', images_train)
     np.save('data/labels_train.npy', labels_train)
