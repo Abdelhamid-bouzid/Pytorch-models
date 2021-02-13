@@ -4,7 +4,6 @@ Created on Fri Jan 29 20:15:21 2021
 
 @author: Admin
 """
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -18,7 +17,7 @@ class ResidualBlock(nn.Module):
         
         self.conv1      = conv3x3(in_channels, out_channels, stride)
         self.bn1        = nn.BatchNorm2d(out_channels)
-        self.relu       = nn.ReLU(inplace=True)
+        self.relu       = nn.LeakyReLU(0.1)
         self.conv2      = conv3x3(out_channels, out_channels)
         self.bn2        = nn.BatchNorm2d(out_channels)
         self.downsample = downsample
@@ -45,17 +44,22 @@ class ResNet(nn.Module):
         self.in_channels = 16
         self.conv        = conv3x3(3, 16)
         self.bn          = nn.BatchNorm2d(16)
-        self.relu        = nn.ReLU(inplace=True)
+        self.relu        = nn.LeakyReLU(0.1)
         self.layer1      = self.make_layer(block, 16, layers[0])
         self.layer2      = self.make_layer(block, 32, layers[1], 1)
         self.layer3      = self.make_layer(block, 64, layers[2], 1)
         self.layer4      = self.make_layer(block, 128, layers[3], 1)
         self.layer5      = self.make_layer(block, 256, layers[4], 1)
-        self.Ap          = nn.AdaptiveAvgPool2d((5,5))
-        self.fc1         = nn.Linear(6400, 4096)
-        self.fc2         = nn.Linear(4096, 2*self.num_points)
-        self.fc3         = nn.Linear(2*self.num_points, 2*self.num_points)
+        self.fc1         = nn.Linear(6400, 2048)
+        self.fc2         = nn.Linear(2048, 512)
+        self.fc3         = nn.Linear(512, 2*self.num_points)
         
+        self.Ap1         = nn.AdaptiveAvgPool2d((240,320))
+        self.Ap2         = nn.AdaptiveAvgPool2d((120,160))
+        self.Ap3         = nn.AdaptiveAvgPool2d((60,80))
+        self.Ap4         = nn.AdaptiveAvgPool2d((30,40))
+        self.Ap5         = nn.AdaptiveAvgPool2d((15,20))
+        self.Ap6         = nn.AdaptiveAvgPool2d((5,5))
         
     def make_layer(self, block, out_channels, blocks, stride=1):
         downsample = None
@@ -75,18 +79,17 @@ class ResNet(nn.Module):
         out = self.conv(x)
         out = self.bn(out)
         out = self.relu(out)
-        out = F.max_pool2d(out,2)
+        out = self.Ap1(out)
         out = self.layer1(out)
-        out = F.max_pool2d(out,2)
+        out = self.Ap2(out)
         out = self.layer2(out)
-        out = F.max_pool2d(out,2)
+        out = self.Ap3(out)
         out = self.layer3(out)
-        out = F.max_pool2d(out,2)
+        out = self.Ap4(out)
         out = self.layer4(out)
-        out = F.max_pool2d(out,2)
+        out = self.Ap5(out)
         out = self.layer5(out)
-        out = F.max_pool2d(out,2)
-        out = self.Ap(out)
+        out = self.Ap6(out)
         out = out.view(out.size(0), -1)
         #print(out.shape)
         out = self.fc1(out)
