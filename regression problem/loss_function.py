@@ -19,7 +19,7 @@ class loss_function(Function):
     def forward(self, pred, truth,device):
         
         ###############################################################################################
-        cdist   = torch.cdist(pred,truth)**2
+        cdist   = 0.5*torch.cdist(pred,truth)**2
         loss1,_ = torch.min(cdist,axis=1)
         loss1   = loss1.mean()
         

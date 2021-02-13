@@ -17,12 +17,12 @@ from plot import plot
 from config import config
 
 #process_data()
-images_train, labels_train, images_test, labels_test = load_data()
+#images_train, labels_train, images_test, labels_test = load_data()
 
 device    = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = ResNet(ResidualBlock, [1, 1, 1, 1, 1],config["number_points"])
 model = model.float().to(device=device, dtype=torch.float)
-summary(model, (3, 640 ,480))
+summary(model, (3, 480 ,640))
 
 Loss_train,Loss_test = learning_function(model,images_train, labels_train,images_test,labels_test)
 
